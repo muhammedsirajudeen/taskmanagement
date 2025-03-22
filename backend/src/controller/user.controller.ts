@@ -31,15 +31,6 @@ class UserController {
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error creating user", error });
         }
     }
-    async googleLoginUser(req: Request, res: Response) {
-        try {
-            const { token } = req.body
-            console.log(token)
-            res.status(HTTP_STATUS.OK).json({ message: "Google user signed in" })
-        } catch (error) {
-            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error signin in", error })
-        }
-    }
     // {
     //        id: '102188446710307923475',
     //        email: 'dummyhunterr@gmail.com',
@@ -89,6 +80,7 @@ class UserController {
                 return
             }
             const jwtToken = await JwtUtil.generateToken({ ...user.toObject(), password: undefined })
+            await this.repository.updateById(user.id, { access_token: token })
             res.cookie('access_token', jwtToken, { sameSite: "strict", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
             res.status(HTTP_STATUS.OK).json({ message: 'Signed in', user: { ...user, password: undefined }, token: jwtToken })
         } catch (error) {
@@ -105,7 +97,6 @@ class UserController {
                 return
             }
             const decodedUser = JwtUtil.verifyToken(bearerToken)
-            console.log(bearerToken)
             res.status(HTTP_STATUS.OK).json({ message: "token verified", user: decodedUser })
         } catch (error) {
             console.log(error)
@@ -117,8 +108,11 @@ class UserController {
     }
     async getUsers(req: Request, res: Response) {
         try {
+            console.log(req.url)
             const users = await this.repository.findAll();
-            res.status(HTTP_STATUS.OK).json(users);
+            //unoptimized approach
+            const withoutPassword = users.map((user) => ({ ...user.toObject(), password: undefined }))
+            res.status(HTTP_STATUS.OK).json({ users: withoutPassword });
         } catch (error) {
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error fetching users", error });
         }

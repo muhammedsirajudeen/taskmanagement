@@ -3,21 +3,24 @@
 import { format } from "date-fns"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Task } from "@/types"
+import type { PopulatedTask,  } from "@/types"
 import { CreateTaskDialog } from "@/components/create-task-dialog"
 import { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { KeyedMutator } from "swr"
+import { TaskData } from "@/app/dashboard/dashboard.page."
 
 interface TaskListProps {
   date: Date
-  tasks: Task[]
+  tasks: PopulatedTask[]
   isLoading: boolean
-  onTaskSelect: (task: Task) => void
+  onTaskSelect: (task: PopulatedTask) => void
   userRole: string
-  onTaskCreate: (task: Task) => void
+  mutate:KeyedMutator<TaskData>
+
 }
 
-export function TaskList({ date, tasks, isLoading, onTaskSelect, userRole }: TaskListProps) {
+export function TaskList({ date, tasks,mutate, isLoading, onTaskSelect, userRole }: TaskListProps) {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
 
   const filteredTasks = tasks.filter((task) => new Date(task.dueDate).toDateString() === date.toDateString())
@@ -68,11 +71,13 @@ export function TaskList({ date, tasks, isLoading, onTaskSelect, userRole }: Tas
         ) : filteredTasks.length > 0 ? (
           <div className="space-y-3">
             {filteredTasks.map((task) => (
+              
               <div
-                key={task.id}
+                key={task._id}
                 className="p-3 border rounded-lg hover:border-primary cursor-pointer transition-colors"
                 onClick={() => onTaskSelect(task)}
               >
+                
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium">{task.title}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
@@ -81,7 +86,7 @@ export function TaskList({ date, tasks, isLoading, onTaskSelect, userRole }: Tas
                 </div>
                 <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Assigned to: {task.assignee}</span>
+                  <span>Assigned to: {task.assignee.email}</span>
                   <span>{format(new Date(task.dueDate), "h:mm a")}</span>
                 </div>
               </div>
@@ -100,7 +105,7 @@ export function TaskList({ date, tasks, isLoading, onTaskSelect, userRole }: Tas
         )}
       </div>
 
-      <CreateTaskDialog isOpen={isCreateTaskOpen} onClose={() => setIsCreateTaskOpen(false)} date={date} />
+      <CreateTaskDialog mutate={mutate} isOpen={isCreateTaskOpen} onClose={() => setIsCreateTaskOpen(false)} date={date} />
     </div>
   )
 }

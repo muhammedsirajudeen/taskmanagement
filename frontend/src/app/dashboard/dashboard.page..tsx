@@ -6,25 +6,34 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar } from "@/components/calendar"
 import { TaskList } from "@/components/task-list"
 import { TaskDetail } from "@/components/task-detail"
-import type { Task } from "@/types"
-import { fetchTasks } from "@/lib/api"
+import type { PopulatedTask } from "@/types"
 import axiosInstance from "@/lib/axios"
 import { useGlobalContext } from "@/providers/global.providers"
+import useSWR from "swr"
+import { fetcher, ToastStyles } from "@/lib/utils"
+import { toast } from "sonner"
+
+export interface TaskData{
+  tasks:PopulatedTask[]
+}
 
 export default function DashboardPage() {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const {data,mutate}=useSWR<TaskData>('/task',fetcher)
+  
+  const [tasks, setTasks] = useState<PopulatedTask[]>([])
+  console.log(data)
+  useEffect(()=>{
+    if(data){
+      setTasks(data.tasks)
+    }
+  },[data])
+  const [selectedTask, setSelectedTask] = useState<PopulatedTask | null>(null)
+  const [isLoading] = useState(false)
   const {user,setUser}=useGlobalContext()
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem("access_token")
-    if (!storedUser) {
-      router.push("/login")
-      return
-    }
+
     async function userVerifier(){
       try {
         const response=await axiosInstance.get('/user/verify')
@@ -39,43 +48,53 @@ export default function DashboardPage() {
     
     userVerifier()
 
-    const loadTasks = async () => {
-      setIsLoading(true)
-      try {
-        const tasksData = await fetchTasks()
-        setTasks(tasksData)
-      } catch (error) {
-        console.error("Failed to fetch tasks:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    // const loadTasks = async () => {
+    //   setIsLoading(true)
+    //   try {
+    //     // setTasks([])
+    //   } catch (error) {
+    //     console.error("Failed to fetch tasks:", error)
+    //   } finally {
+    //     setIsLoading(false)
+    //   }
+    // }
 
-    loadTasks()
-  }, [selectedDate, router])
+    // loadTasks()
+  }, [selectedDate, router, setUser])
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date)
     setSelectedTask(null)
   }
 
-  const handleTaskSelect = (task: Task) => {
+  const handleTaskSelect = (task: PopulatedTask) => {
     setSelectedTask(task)
   }
 
-  const handleTaskUpdate = (updatedTask: Task) => {
-    setTasks(tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)))
-    setSelectedTask(null)
+  const handleTaskUpdate = async  (updatedTask: PopulatedTask) => {
+    // setTasks(tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)))
+    try {
+      await axiosInstance.put(`/task/${updatedTask._id}`,updatedTask)
+      mutate()
+      setSelectedTask(null)
+      toast.success("updated successfully",ToastStyles.success)      
+    } catch (error) {
+      console.log(error)
+      toast.error("please try again",ToastStyles.error)
+    }
   }
 
-  const handleTaskCreate = (newTask: Task) => {
-    setTasks([...tasks, newTask])
-    setSelectedTask(null)
-  }
 
-  const handleTaskDelete = (taskId: string) => {
-    setTasks(tasks.filter((task) => task.id !== taskId))
-    setSelectedTask(null)
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      await axiosInstance.delete(`/task/${taskId}`)
+      setSelectedTask(null)
+      mutate()
+      toast.success("delete successfully",ToastStyles.success)
+    } catch (error) {
+      console.log(error)
+      toast.error("please try again",ToastStyles.error)  
+    }
   }
 
   if (!user) return null
@@ -90,10 +109,10 @@ export default function DashboardPage() {
           <TaskList
             date={selectedDate}
             tasks={tasks}
+            mutate={mutate}
             isLoading={isLoading}
             onTaskSelect={handleTaskSelect}
             userRole={user.role}
-            onTaskCreate={handleTaskCreate}
           />
           {selectedTask && (
             <TaskDetail

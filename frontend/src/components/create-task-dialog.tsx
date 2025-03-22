@@ -10,15 +10,18 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import useSWR from "swr"
+import useSWR, { KeyedMutator, ScopedMutator } from "swr"
 import { fetcher } from "@/lib/utils"
 import { User } from "@/types"
 import axiosInstance from "@/lib/axios"
+import { TaskData } from "@/app/dashboard/dashboard.page."
 
 interface CreateTaskDialogProps {
   isOpen: boolean
   onClose: () => void
   date: Date
+  mutate:KeyedMutator<TaskData>
+
 }
 
 interface UserDataProps {
@@ -36,7 +39,7 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>
 
-export function CreateTaskDialog({ isOpen, onClose, date }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ isOpen, onClose, date, mutate }: CreateTaskDialogProps) {
   const { data, isLoading: isUserLoading } = useSWR<UserDataProps>("/user/all", fetcher)
 
   const {
@@ -62,6 +65,7 @@ export function CreateTaskDialog({ isOpen, onClose, date }: CreateTaskDialogProp
       const response=await axiosInstance.post('/task/',formData)
       console.log(response)
       onClose()
+      mutate()
       reset()
     } catch (error) {
       console.error("Failed to create task:", error)

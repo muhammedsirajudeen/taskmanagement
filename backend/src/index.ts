@@ -6,8 +6,16 @@ import connectDB from '@/config/mongo.config'
 import UserRouter from './route/user.routes'
 import TaskRouter from './route/task.routes'
 import cookieparser from "cookie-parser"
+import { IUser } from './model/user.model'
 const app = express()
 configDotenv()
+declare global {
+    namespace Express {
+        interface Request {
+            user?: IUser
+        }
+    }
+}
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))

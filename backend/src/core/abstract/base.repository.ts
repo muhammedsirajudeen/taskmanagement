@@ -1,5 +1,9 @@
-import { Model, Document } from "mongoose";
+import mongoose, { Model, Document } from "mongoose";
 
+interface PathPopulate {
+    select: string
+    path: string
+}
 export class BaseRepository<T extends Document> {
     private model: Model<T>;
 
@@ -12,18 +16,18 @@ export class BaseRepository<T extends Document> {
     }
 
     async findById(id: string): Promise<T | null> {
-        return this.model.findOne({ id }).exec();
+        return this.model.findOne({ _id: new mongoose.Types.ObjectId(id) }).exec();
     }
 
-    async findAll(): Promise<T[]> {
-        return this.model.find().exec();
+    async findAll(array: PathPopulate[] = []): Promise<T[]> {
+        return this.model.find().populate(array).exec();
     }
 
     async updateById(id: string, data: Partial<T>): Promise<T | null> {
-        return this.model.findOneAndUpdate({ id }, data, { new: true }).exec();
+        return this.model.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, data, { new: true }).exec();
     }
 
     async deleteById(id: string): Promise<T | null> {
-        return this.model.findOneAndDelete({ id }).exec();
+        return this.model.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id) }).exec();
     }
 }

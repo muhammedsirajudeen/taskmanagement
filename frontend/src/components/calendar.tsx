@@ -15,13 +15,14 @@ import {
 } from "date-fns"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Task } from "@/types"
+import type { PopulatedTask } from "@/types"
 import { CreateTaskDialog } from "@/components/create-task-dialog"
+import { mutate } from "swr"
 
 interface CalendarProps {
   selectedDate: Date
   onDateSelect: (date: Date) => void
-  tasks: Task[]
+  tasks: PopulatedTask[]
   userRole: string
 }
 
@@ -132,7 +133,7 @@ export function Calendar({ selectedDate, onDateSelect, tasks, userRole }: Calend
             <div className="mt-2 space-y-1">
               {dayTasks.slice(0, 3).map((task) => (
                 <div
-                  key={task.id}
+                  key={task._id}
                   className={`text-xs p-1 rounded truncate ${
                     task.priority === "High"
                       ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
@@ -166,7 +167,7 @@ export function Calendar({ selectedDate, onDateSelect, tasks, userRole }: Calend
       {renderDays()}
       <div className="flex-1 overflow-y-auto">{renderCells()}</div>
       {taskDate && (
-        <CreateTaskDialog isOpen={isCreateTaskOpen} onClose={() => setIsCreateTaskOpen(false)} date={taskDate} />
+        <CreateTaskDialog mutate={mutate} isOpen={isCreateTaskOpen} onClose={() => setIsCreateTaskOpen(false)} date={taskDate} />
       )}
     </div>
   )

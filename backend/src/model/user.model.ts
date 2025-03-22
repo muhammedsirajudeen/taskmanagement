@@ -1,13 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
-    id: string;
+    _id: string;
     name: string;
     email: string;
     password: string;
     role: "Manager" | "Employee";
     access_token: string
 }
+export type Stripped<T> = Omit<T, keyof Document | "_id">;
 
 const UserSchema = new Schema<IUser>(
     {

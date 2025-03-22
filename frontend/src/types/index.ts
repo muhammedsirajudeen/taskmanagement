@@ -6,7 +6,7 @@ export interface User {
 }
 
 export interface Task {
-    id: string
+    _id: string
     title: string
     description: string
     assignee: string
@@ -15,5 +15,9 @@ export interface Task {
     priority: "Low" | "Medium" | "High"
     status: "Pending" | "In Progress" | "Completed"
     createdAt: string
+}
+export interface PopulatedTask extends Omit<Task, "assignee" | "assignedBy"> {
+    assignee: User
+    assignedBy: User
 }
 
