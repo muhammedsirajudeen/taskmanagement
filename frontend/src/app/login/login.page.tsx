@@ -10,13 +10,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import GoogleLoginButton from "@/components/google.button"
-import { useGoogleLogin } from "@react-oauth/google"
+import { TokenResponse, useGoogleLogin } from "@react-oauth/google"
 import { useState } from "react"
+import axiosInstance from "@/lib/axios"
+import { AxiosError, HttpStatusCode } from "axios"
+import { ToastStyles } from "@/lib/utils"
 
 export default function Login() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [tabs,setTabs]=useState<"login"|"signup">("login")
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -39,13 +43,54 @@ export default function Login() {
     }, 1000)
   }
   const login = useGoogleLogin({
-    onSuccess: tokenResponse => console.log("login", tokenResponse),
+    onSuccess: async (tokenResponse) => {
+      console.log("login", tokenResponse.access_token)
+      try {        
+        const response=await axiosInstance.post('/user/google/signin',{token:tokenResponse.access_token})
+        console.log(response)
+        window.localStorage.setItem('access_token',response.data.token)
+        toast.success('user signed in successfully',ToastStyles.success)
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 1000);
+      } catch (error) {
+        console.log(error)
+        const fetchError=error as AxiosError
+        if(fetchError.status===HttpStatusCode.NotFound){
+          toast.error("please register before continuing",ToastStyles.error)
+        }
+      }
+      
+    },
     scope: "https://www.googleapis.com/auth/calendar"
   });
   const signup= useGoogleLogin({
-    onSuccess: tokenResponse => {
+    onSuccess: async (tokenResponse:TokenResponse) => {
       setIsLoading(true)
       console.log("signup ",tokenResponse)
+      try {        
+        const response=await axiosInstance.post('/user/google/signup',{token:tokenResponse.access_token})
+        console.log(response)
+        toast.success("User signed", {
+          style: { backgroundColor: "green", color: "white", border: "1px solid #374151" },
+        });
+        setIsLoading(false)
+        setTimeout(()=>{
+          router.push('/login')
+        },1000)
+      } catch (error) {
+          const fetchError=error as AxiosError
+          if(fetchError.status===HttpStatusCode.NotFound){
+            toast.error('user not found',{style:{backgroundColor:"red",color:"white"}})
+          }else if(fetchError.status===HttpStatusCode.Conflict){
+            toast.error('user already exists',{style:{backgroundColor:"red",color:"white"}})
+
+          }
+          else{
+            toast.error('please try again')
+          }
+          setIsLoading(false)
+      }
     },
     scope: "https://www.googleapis.com/auth/calendar"
   });
@@ -58,10 +103,10 @@ export default function Login() {
           <CardDescription className="text-center">Sign in to your account to continue</CardDescription>
         </CardHeader>
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
+            <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login" onClick={() => setTabs("login")}>Login</TabsTrigger>
+            <TabsTrigger value="register" onClick={() => setTabs("signup")}>Register</TabsTrigger>
+            </TabsList>
           <TabsContent value="login">
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4 pt-4">
@@ -102,20 +147,20 @@ export default function Login() {
                 <Label htmlFor="register-password">Password</Label>
                 <Input id="register-password" type="password" required />
               </div>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <select
+                {/* <select
                   id="role"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="Employee">Employee</option>
                   <option value="Manager">Manager</option>
-                </select>
-              </div>
+                </select> */}
+              {/* </div> */} 
               <GoogleLoginButton isLoading={isLoading} onLogin={signup} />
 
             </CardContent>
-            <CardFooter>
+            <CardFooter className="mt-10"  >
               <Button disabled={isLoading} className="w-full">Create Account</Button>
             </CardFooter>
           </TabsContent>

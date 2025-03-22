@@ -28,9 +28,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
   useEffect(() => {
     setIsMounted(true)
+
   }, [])
 
   const handleLogout = () => {

@@ -6,27 +6,40 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar } from "@/components/calendar"
 import { TaskList } from "@/components/task-list"
 import { TaskDetail } from "@/components/task-detail"
-import type { User, Task } from "@/types"
+import type { Task } from "@/types"
 import { fetchTasks } from "@/lib/api"
+import axiosInstance from "@/lib/axios"
+import { useGlobalContext } from "@/providers/global.providers"
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
+  const {user,setUser}=useGlobalContext()
   useEffect(() => {
     // Check if user is logged in
-    const storedUser = localStorage.getItem("user")
+    const storedUser = localStorage.getItem("access_token")
     if (!storedUser) {
       router.push("/login")
       return
     }
-
-    setUser(JSON.parse(storedUser))
-
+    async function userVerifier(){
+      try {
+        const response=await axiosInstance.get('/user/verify')
+        console.log(response)   
+        setUser(response.data.user)  
+           
+      } catch (error) {
+        console.log(error)
+        router.push('/login')
+      }
+    }
+    
+    userVerifier()
+    // setUser(JSON.parse(storedUser))
+    // setUser({email:"ss",name:"ss",role:"Manager",id:"ss"})
     // Fetch tasks for the selected date
     const loadTasks = async () => {
       setIsLoading(true)

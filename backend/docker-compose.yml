@@ -27,6 +27,7 @@ services:
     environment:
       MONGO_URI: "mongodb://root:example@mongodb:27017/yourdatabase?authSource=admin"
       PORT: 4000
+      FRONTEND_URL: "http://localhost:3000"
     volumes:
       - ./:/app
       - /app/node_modules

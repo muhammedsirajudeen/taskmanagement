@@ -6,4 +6,7 @@ export default class UserRepository extends BaseRepository<IUser> implements IUs
     constructor() {
         super(UserModel);
     }
+    async findByEmail(email: string) {
+        return await UserModel.findOne({ email })
+    }
 }
