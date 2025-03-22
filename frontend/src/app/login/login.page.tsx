@@ -62,7 +62,7 @@ export default function Login() {
       }
       
     },
-    scope: "https://www.googleapis.com/auth/calendar"
+    scope: "https://www.googleapis.com/auth/calendar.events"
   });
   const signup= useGoogleLogin({
     onSuccess: async (tokenResponse:TokenResponse) => {
@@ -92,7 +92,7 @@ export default function Login() {
           setIsLoading(false)
       }
     },
-    scope: "https://www.googleapis.com/auth/calendar"
+    scope: "https://www.googleapis.com/auth/calendar.events"
   });
   
   return (

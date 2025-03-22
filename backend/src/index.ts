@@ -5,12 +5,13 @@ import { configDotenv } from 'dotenv'
 import connectDB from '@/config/mongo.config'
 import UserRouter from './route/user.routes'
 import TaskRouter from './route/task.routes'
-
+import cookieparser from "cookie-parser"
 const app = express()
 configDotenv()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
+app.use(cookieparser())
 app.use(cors({
     origin: process.env.FRONTEND_URL,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

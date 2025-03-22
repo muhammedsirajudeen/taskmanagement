@@ -88,12 +88,31 @@ class UserController {
                 res.status(HTTP_STATUS.NOT_FOUND).json({ message: "please signin" })
                 return
             }
-            const jwtToken = await JwtUtil.generateToken(user.toObject())
+            const jwtToken = await JwtUtil.generateToken({ ...user.toObject(), password: undefined })
+            res.cookie('access_token', jwtToken, { sameSite: "strict", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
             res.status(HTTP_STATUS.OK).json({ message: 'Signed in', user: { ...user, password: undefined }, token: jwtToken })
         } catch (error) {
             console.log(error)
             const controllerError = error as Error
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
+        }
+    }
+    async VerifyToken(req: Request, res: Response) {
+        try {
+            const bearerToken = req.cookies.access_token
+            if (!bearerToken) {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "user not authorized" })
+                return
+            }
+            const decodedUser = JwtUtil.verifyToken(bearerToken)
+            console.log(bearerToken)
+            res.status(HTTP_STATUS.OK).json({ message: "token verified", user: decodedUser })
+        } catch (error) {
+            console.log(error)
+            console.log(error)
+            const controllerError = error as Error
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
+
         }
     }
     async getUsers(req: Request, res: Response) {

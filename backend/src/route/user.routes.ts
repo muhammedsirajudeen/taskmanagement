@@ -7,6 +7,7 @@ const userController = new UserController(new UserRepository());
 
 router.post("/google/signup", (req, res) => userController.googleSignupUser(req, res))
 router.post("/google/signin", (req, res) => userController.googleSigninUser(req, res))
+router.get("/verify", (req, res) => userController.VerifyToken(req, res))
 router.post("/", (req, res) => userController.createUser(req, res));
 router.get("/", (req, res) => userController.getUsers(req, res));
 router.get("/:id", (req, res) => userController.getUserById(req, res));

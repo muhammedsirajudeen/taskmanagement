@@ -38,9 +38,7 @@ export default function DashboardPage() {
     }
     
     userVerifier()
-    // setUser(JSON.parse(storedUser))
-    // setUser({email:"ss",name:"ss",role:"Manager",id:"ss"})
-    // Fetch tasks for the selected date
+
     const loadTasks = async () => {
       setIsLoading(true)
       try {
