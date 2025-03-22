@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import useSWR, { KeyedMutator, ScopedMutator } from "swr"
+import useSWR, { KeyedMutator } from "swr"
 import { fetcher } from "@/lib/utils"
 import { User } from "@/types"
 import axiosInstance from "@/lib/axios"
@@ -20,8 +20,7 @@ interface CreateTaskDialogProps {
   isOpen: boolean
   onClose: () => void
   date: Date
-  mutate:KeyedMutator<TaskData>
-
+  mutate: KeyedMutator<TaskData>
 }
 
 interface UserDataProps {
@@ -30,17 +29,48 @@ interface UserDataProps {
 }
 
 const taskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  priority: z.enum(["Low", "Medium", "High"]),
-  assignee: z.string().min(1, "Assignee is required"),
-  dueDate: z.string().min(1, "Due date is required"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must be less than 100 characters")
+    .trim()
+    .refine(val => val.length > 0, "Title cannot be only whitespace")
+    .refine(val => !/^\s+|\s+$/.test(val), "Title cannot start or end with whitespace")
+    .refine(
+      val => /^[a-zA-Z0-9\s\-_.,!?:;()[\]{}'"#$%&*+<>=@^`~\/\\]+$/.test(val),
+      "Title contains invalid characters"
+    ),
+  description: z
+    .string()
+    .min(10)
+    .max(500, "Description must be less than 500 characters")
+    .optional()
+    .transform(val => val === "" ? undefined : val?.trim()),
+  priority: z.enum(["Low", "Medium", "High"], {
+    errorMap: () => ({ message: "Please select a valid priority level" })
+  }),
+  assignee: z
+    .string()
+    .min(1, "Assignee is required")
+    .refine(val => val.trim().length > 0, "Please select a valid assignee"),
+  dueDate: z
+    .string()
+    .min(1, "Due date is required")
+    .refine(val => {
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    }, "Please enter a valid date and time")
+    .refine(val => {
+      const selectedDate = new Date(val);
+      const now = new Date();
+      return selectedDate >= now;
+    }, "Due date must be in the future"),
 })
 
 type TaskFormData = z.infer<typeof taskSchema>
 
 export function CreateTaskDialog({ isOpen, onClose, date, mutate }: CreateTaskDialogProps) {
-  const { data, isLoading: isUserLoading } = useSWR<UserDataProps>("/user/all", fetcher)
+  const { data } = useSWR<UserDataProps>("/user/managed/all", fetcher)
 
   const {
     register,
@@ -62,7 +92,7 @@ export function CreateTaskDialog({ isOpen, onClose, date, mutate }: CreateTaskDi
   const onSubmit = async (formData: TaskFormData) => {
     console.log("Submitted Data:", formData)
     try {
-      const response=await axiosInstance.post('/task/',formData)
+      const response = await axiosInstance.post('/task/', formData)
       console.log(response)
       onClose()
       mutate()
@@ -89,12 +119,13 @@ export function CreateTaskDialog({ isOpen, onClose, date, mutate }: CreateTaskDi
             <div className="grid gap-2">
               <label htmlFor="description" className="text-sm font-medium">Description</label>
               <Textarea id="description" {...register("description")} rows={4} />
+              {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <label htmlFor="priority" className="text-sm font-medium">Priority</label>
-                <Select onValueChange={(value) => setValue("priority", value as TaskFormData["priority"]) }>
+                <Select onValueChange={(value) => setValue("priority", value as TaskFormData["priority"])}>
                   <SelectTrigger id="priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>

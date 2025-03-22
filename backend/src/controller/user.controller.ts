@@ -3,6 +3,8 @@ import { IUserRepository } from "@/core/interface/user.repository";
 import { HTTP_STATUS } from "@/constants/HttpStatus";
 import { BcryptUtil } from "@/util/bcrypt.util";
 import { JwtUtil } from "@/util/jwt.util";
+import mongoose, { isObjectIdOrHexString } from "mongoose";
+import { IUserModelType, Stripped } from "@/model/user.model";
 
 async function getGoogleProfile(token: string) {
     const response = await (await fetch("https://www.googleapis.com/oauth2/v2/userinfo",
@@ -25,12 +27,51 @@ class UserController {
 
     async createUser(req: Request, res: Response) {
         try {
-            const user = await this.repository.create(req.body);
-            res.status(HTTP_STATUS.CREATED).json(user);
+            const request = req.body
+            const userDto: Stripped<IUserModelType> = {
+                email: request.email,
+                password: await BcryptUtil.hashPassword(request.password),
+                role: "Employee",
+                name: request.name,
+
+            }
+            const user = await this.repository.create(userDto);
+            res.status(HTTP_STATUS.CREATED).json({ ...user.toObject(), password: undefined });
         } catch (error) {
+            const controllerError = error as Error
+            if (controllerError.message.includes("E11000")) {
+                res.status(HTTP_STATUS.CONFLICT).json({ message: "User already exists" })
+                return
+            }
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error creating user", error });
         }
     }
+    async Login(req: Request, res: Response) {
+        try {
+            const request = req.body
+            const userDto = {
+                email: request.email,
+                password: request.password
+            }
+            const user = await this.repository.findByEmail(userDto.email)
+            if (!user) {
+                res.status(HTTP_STATUS.NOT_FOUND).json({ message: "user not found" })
+                return
+            }
+            if (!await BcryptUtil.comparePassword(userDto.password, user.password)) {
+                res.status(HTTP_STATUS.FORBIDDEN).json({ message: "invalid credentials" })
+                return
+            }
+            const token = JwtUtil.generateToken({ ...user.toObject(), password: undefined })
+            res.cookie('access_token', token, { sameSite: "strict", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
+            res.status(HTTP_STATUS.OK).json({ message: "user verified", user: { ...user.toObject(), password: undefined } })
+        } catch (error) {
+            const controllerError = error as Error
+
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: 'error signing in', error: controllerError.message })
+        }
+    }
+
     // {
     //        id: '102188446710307923475',
     //        email: 'dummyhunterr@gmail.com',
@@ -100,21 +141,67 @@ class UserController {
             res.status(HTTP_STATUS.OK).json({ message: "token verified", user: decodedUser })
         } catch (error) {
             console.log(error)
-            console.log(error)
             const controllerError = error as Error
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
 
         }
     }
+    async AddRoleAndManager(req: Request, res: Response) {
+        try {
+            const user = req.user
+            console.log(user)
+            if (!user) {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized" })
+                return
+            }
+            const { id } = req.params
+            if (!id || !isObjectIdOrHexString(id)) {
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "pass a valid id" })
+                return
+            }
+            const toUpdateUser = await this.repository.findById(id)
+            if (!toUpdateUser) {
+                res.status(HTTP_STATUS.NOT_FOUND).json({ message: "user not found" })
+                return
+            }
+            const { role, manager } = req.body
+            toUpdateUser.role = role
+            toUpdateUser.manager = new mongoose.Types.ObjectId(manager as string)
+            await toUpdateUser.save()
+            res.status(HTTP_STATUS.OK).json({ message: "success" })
+        } catch (error) {
+            console.log(error)
+            const controllerError = error as Error
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
+        }
+    }
     async getUsers(req: Request, res: Response) {
         try {
             console.log(req.url)
-            const users = await this.repository.findAll();
+            const users = await this.repository.findAll([{ path: 'manager', select: 'username email' }]);
             //unoptimized approach
             const withoutPassword = users.map((user) => ({ ...user.toObject(), password: undefined }))
             res.status(HTTP_STATUS.OK).json({ users: withoutPassword });
         } catch (error) {
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error fetching users", error });
+        }
+    }
+    async getUserByManager(req: Request, res: Response) {
+        try {
+            const user = req.user
+            if (!user || user.role !== "Manager") {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized" })
+                return
+            }
+            const users = await this.repository.findByFilter({ manager: new mongoose.Types.ObjectId(user._id as string) },
+                [
+                    { path: 'manager', select: 'username email' }
+                ]
+            )
+            res.status(HTTP_STATUS.OK).json({ message: "Ok", users: users })
+        } catch (error) {
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error fetching users", error });
+
         }
     }
 

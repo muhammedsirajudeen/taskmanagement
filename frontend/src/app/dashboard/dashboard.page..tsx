@@ -48,18 +48,6 @@ export default function DashboardPage() {
     
     userVerifier()
 
-    // const loadTasks = async () => {
-    //   setIsLoading(true)
-    //   try {
-    //     // setTasks([])
-    //   } catch (error) {
-    //     console.error("Failed to fetch tasks:", error)
-    //   } finally {
-    //     setIsLoading(false)
-    //   }
-    // }
-
-    // loadTasks()
   }, [selectedDate, router, setUser])
 
   const handleDateSelect = (date: Date) => {
@@ -116,6 +104,7 @@ export default function DashboardPage() {
           />
           {selectedTask && (
             <TaskDetail
+              mutate={mutate}
               task={selectedTask}
               userRole={user.role}
               onUpdate={handleTaskUpdate}

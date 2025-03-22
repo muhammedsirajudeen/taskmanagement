@@ -11,8 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import type { PopulatedTask, User } from "@/types"
 import { X, Trash, Edit } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import useSWR from "swr"
-import { fetcher } from "@/lib/utils"
+import useSWR, { KeyedMutator } from "swr"
+import { fetcher, ToastStyles } from "@/lib/utils"
+import { toast } from "sonner"
+import axiosInstance from "@/lib/axios"
+import { TaskData } from "@/app/dashboard/dashboard.page."
 
 interface TaskDetailProps {
   task: PopulatedTask
@@ -20,18 +23,21 @@ interface TaskDetailProps {
   onUpdate: (task: PopulatedTask) => void
   onDelete: (taskId: string) => void
   onClose: () => void
+  mutate:KeyedMutator<TaskData>
+
 }
 
 interface UserResponse{
   users:User[]
 }
 
-export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskDetailProps) {
+export function TaskDetail({ task, userRole, onUpdate, onDelete, onClose, mutate }: TaskDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState<PopulatedTask>(task)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const {data}=useSWR<UserResponse>('/user/all',fetcher)
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setEditedTask({ ...editedTask, [name]: value })
@@ -39,6 +45,18 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
 
   const handleSelectChange = (name: string, value: string) => {
     setEditedTask({ ...editedTask, [name]: value })
+  }
+
+  const handleStatusChange = async  (status: "Pending" | "In Progress" | "Completed") => {
+    try {
+      await axiosInstance.patch(`/task/status/${task._id}`,{status})
+      setEditedTask({ ...editedTask, status })
+      mutate()
+      toast.success("status updated",ToastStyles.success)
+    } catch (error) {
+      console.log(error)
+      toast.error("please try again",ToastStyles.error)
+    }
   }
 
   const handleSave = async () => {
@@ -68,6 +86,30 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
   }
 
   const isManager = userRole === "Manager"
+  const isEmployee = userRole === "Employee"
+
+  // Helper function to get status badge styles
+  const getStatusStyles = (status: string) => {
+    switch(status) {
+      case "Completed":
+        return {
+          bg: "rgba(34, 197, 94, 0.1)",
+          color: "rgb(21, 128, 61)"
+        }
+      case "In Progress":
+        return {
+          bg: "rgba(59, 130, 246, 0.1)",
+          color: "rgb(37, 99, 235)"
+        }
+      default: // Pending
+        return {
+          bg: "rgba(245, 158, 11, 0.1)",
+          color: "rgb(180, 83, 9)"
+        }
+    }
+  }
+
+  const statusStyles = getStatusStyles(editedTask.status || "Pending")
 
   return (
     <>
@@ -95,6 +137,7 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
                 </Button>
               </>
             )}
+            
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
               <X className="h-5 w-5" />
               <span className="sr-only">Close</span>
@@ -151,6 +194,19 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
                   </Select>
                 </div>
               </div>
+              <div>
+                <label className="text-xs sm:text-sm font-medium mb-1 block">Status</label>
+                <Select value={editedTask.status || "Pending"} onValueChange={(value) => handleSelectChange("status", value)}>
+                  <SelectTrigger className="text-sm sm:text-base">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setIsEditing(false)} size="sm" className="text-xs sm:text-sm h-8 sm:h-10">
                   Cancel
@@ -164,24 +220,35 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
             <>
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-2 break-words">{task.title}</h3>
-                <div
-                  className="inline-block px-2 py-1 rounded-full text-xs font-medium mb-3 sm:mb-4"
-                  style={{
-                    backgroundColor:
-                      task.priority === "High"
-                        ? "rgba(239, 68, 68, 0.1)"
-                        : task.priority === "Medium"
-                          ? "rgba(245, 158, 11, 0.1)"
-                          : "rgba(34, 197, 94, 0.1)",
-                    color:
-                      task.priority === "High"
-                        ? "rgb(185, 28, 28)"
-                        : task.priority === "Medium"
-                          ? "rgb(180, 83, 9)"
-                          : "rgb(21, 128, 61)",
-                  }}
-                >
-                  {task.priority} Priority
+                <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
+                  <div
+                    className="inline-block px-2 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor:
+                        task.priority === "High"
+                          ? "rgba(239, 68, 68, 0.1)"
+                          : task.priority === "Medium"
+                            ? "rgba(245, 158, 11, 0.1)"
+                            : "rgba(34, 197, 94, 0.1)",
+                      color:
+                        task.priority === "High"
+                          ? "rgb(185, 28, 28)"
+                          : task.priority === "Medium"
+                            ? "rgb(180, 83, 9)"
+                            : "rgb(21, 128, 61)",
+                    }}
+                  >
+                    {task.priority} Priority
+                  </div>
+                  <div
+                    className="inline-block px-2 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: statusStyles.bg,
+                      color: statusStyles.color
+                    }}
+                  >
+                    {editedTask.status || "Pending"}
+                  </div>
                 </div>
                 <div className="mb-4 sm:mb-6">
                   <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap">
@@ -203,6 +270,31 @@ export function TaskDetail({ task, userRole,onUpdate, onDelete, onClose }: TaskD
                     </p>
                   </div>
                 </div>
+                
+                {/* Status toggle for employees */}
+                {isEmployee && (
+                  <div className="mt-4 sm:mt-6 p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
+                    <p className="text-xs sm:text-sm font-medium mb-2">Update Task Status</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(["Pending", "In Progress", "Completed"] as const).map(status => (
+                        <Button 
+                          key={status} 
+                          variant={editedTask.status === status ? "default" : "outline"}
+                          size="sm" 
+                          className="text-xs h-8"
+                          onClick={() => {
+                            const updatedTask = { ...editedTask, status };
+                            setEditedTask(updatedTask);
+                            // onUpdate(updatedTask);
+                            handleStatusChange(status)
+                          }}
+                        >
+                          {status}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

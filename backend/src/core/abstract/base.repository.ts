@@ -22,7 +22,9 @@ export class BaseRepository<T extends Document> {
     async findAll(array: PathPopulate[] = []): Promise<T[]> {
         return this.model.find().populate(array).exec();
     }
-
+    async findByFilter(filter: mongoose.FilterQuery<T>, array: PathPopulate[] = []) {
+        return await this.model.find(filter).populate(array).exec()
+    }
     async updateById(id: string, data: Partial<T>): Promise<T | null> {
         return this.model.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, data, { new: true }).exec();
     }

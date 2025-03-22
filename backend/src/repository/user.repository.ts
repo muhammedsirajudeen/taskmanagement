@@ -1,8 +1,8 @@
-import UserModel, { IUser } from "@/model/user.model";
+import UserModel, { IUserModelType } from "@/model/user.model";
 import { BaseRepository } from "@/core/abstract/base.repository";
 import { IUserRepository } from "@/core/interface/user.repository";
 
-export default class UserRepository extends BaseRepository<IUser> implements IUserRepository {
+export default class UserRepository extends BaseRepository<IUserModelType> implements IUserRepository {
     constructor() {
         super(UserModel);
     }

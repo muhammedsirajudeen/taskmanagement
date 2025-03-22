@@ -6,11 +6,15 @@ export interface IUser extends Document {
     email: string;
     password: string;
     role: "Manager" | "Employee";
-    access_token: string
+    access_token?: string
+    manager?: string
+}
+export interface IUserModelType extends Omit<IUser, "manager"> {
+    manager?: mongoose.Types.ObjectId
 }
 export type Stripped<T> = Omit<T, keyof Document | "_id">;
 
-const UserSchema = new Schema<IUser>(
+const UserSchema = new Schema<IUserModelType>(
     {
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
@@ -22,9 +26,14 @@ const UserSchema = new Schema<IUser>(
         password: {
             type: String,
             required: true
+        },
+        manager: {
+            type: mongoose.Schema.ObjectId,
+            required: false,
+            ref: 'User'
         }
     },
     { timestamps: true }
 );
 
-export default mongoose.model<IUser>("User", UserSchema);
+export default mongoose.model<IUserModelType>("User", UserSchema);

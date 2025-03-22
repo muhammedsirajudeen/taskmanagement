@@ -3,6 +3,7 @@ export interface User {
     name: string
     email: string
     role: "Manager" | "Employee"
+    manager?: User
 }
 
 export interface Task {

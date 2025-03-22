@@ -97,7 +97,21 @@ export default class TaskController {
     async getAllTasks(req: Request, res: Response) {
         try {
             console.log(req.url)
-            const tasks = await this.taskRepository.findAll([
+            const user = req.user
+            if (!user) {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized" })
+                return
+            }
+            if (user.role === "Employee") {
+                const tasks = await this.taskRepository.findByFilter({ assignee: new mongoose.Types.ObjectId(user._id) }, [
+                    { 'path': 'assignee', select: 'email name' },
+                    { 'path': 'assignedBy', select: 'email name' },
+                ])
+                console.log(user._id)
+                res.status(HTTP_STATUS.OK).json({ tasks: tasks, message: "success" })
+                return
+            }
+            const tasks = await this.taskRepository.findByFilter({ assignedBy: new mongoose.Types.ObjectId(user._id) }, [
                 { 'path': 'assignee', select: 'email name' },
                 { 'path': 'assignedBy', select: 'email name' },
             ]);
@@ -130,6 +144,33 @@ export default class TaskController {
             }
             if (taskToUpdate?.assignedBy.toHexString() === req.user?._id || taskToUpdate?.assignee.toHexString() === req.user?._id) {
                 const updatedTask = await this.taskRepository.updateById(req.params.id, req.body);
+                if (!updatedTask) {
+                    res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Task not found" });
+                    return
+                }
+                res.status(HTTP_STATUS.OK).json(updatedTask);
+            } else {
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized" })
+                return
+
+            }
+        } catch (error) {
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Error updating task", error });
+        }
+    }
+    async updateTaskStatus(req: Request, res: Response) {
+        try {
+            const taskToUpdate = await this.taskRepository.findById(req.params.id)
+            console.log(taskToUpdate)
+            if (!req.params.id || !isObjectIdOrHexString(req.params.id)) {
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Bad request" })
+                return
+            }
+            if (taskToUpdate?.assignedBy.toHexString() === req.user?._id || taskToUpdate?.assignee.toHexString() === req.user?._id) {
+                const taskDTO: Partial<ITaskModelType> = {
+                    status: req.body.status
+                }
+                const updatedTask = await this.taskRepository.updateById(req.params.id, taskDTO);
                 if (!updatedTask) {
                     res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Task not found" });
                     return
