@@ -1,45 +1,46 @@
-# Task Assignment Application
+# 📆 Task Assignment Application
 
-## Overview
-The Task Assignment Application is a task management system with a calendar interface. The application allows Managers to create, assign, and manage tasks for Employees under their supervision. Employees can view their assigned tasks and complete them accordingly. Additionally, all created tasks are also integrated with Google Calendar events for better tracking.
+## 🔍 Overview
+The Task Assignment Application is a comprehensive task management system featuring an intuitive calendar interface. This platform enables Managers to efficiently create, assign, and manage tasks for Employees under their supervision. Employees can easily view and complete their assigned tasks. All tasks seamlessly integrate with Google Calendar for enhanced tracking and productivity.
 
-## Features
+## ✨ Features
 
-### Authentication
-- Secure user authentication system.
-- Role-based access control (RBAC) with two roles:
-  - **Employee**: Can only view assigned tasks.
-  - **Manager**: Can create, update, assign, and delete tasks for Employees under them.
-- Managers can act as their own managers as well.
+### 🔐 Authentication
+- Secure user authentication system
+- Role-based access control (RBAC):
+  - **Employee**: View and manage assigned tasks
+  - **Manager**: Full control over task creation, assignment, and management
+- Self-management capabilities for Managers
 
-### Task Management
-- CRUD operations (Create, Read, Update, Delete) for tasks.
-- **Managers** can:
-  - Click on the calendar interface to create new tasks.
-  - Assign tasks to Employees.
-  - Update or delete tasks.
-  - View all tasks for Employees on a selected day.
-- **Employees** can:
-  - View only the tasks assigned to them.
+### 📋 Task Management
+- **Managers can:**
+  - Create new tasks directly from the calendar interface
+  - Assign tasks to specific Employees
+  - Update or delete existing tasks
+  - View all Employee tasks for any selected day
+- **Employees can:**
+  - Access a personalized view of assigned tasks
+  - Mark tasks as completed
 
-### Calendar Interface
-- Interactive calendar-based task management system.
-- Similar UI/UX to Google Calendar or Outlook.
-- Easy task scheduling by selecting a date.
+### 📅 Calendar Interface
+- Interactive, user-friendly calendar design
+- Familiar UI/UX inspired by Google Calendar and Outlook
+- Simple task scheduling through date selection
 
-### Google Calendar Integration
-- When creating a task, it is automatically added as an event in **Google Calendar**.
-- This ensures seamless tracking and synchronization with personal calendars.
+### 🔄 Google Calendar Integration
+- Automatic synchronization with Google Calendar
+- Tasks appear as events in users' personal calendars
+- Seamless tracking across platforms
 
-## Tech Stack
+## 🛠️ Tech Stack
 - **Frontend:** React (TypeScript)
 - **Backend:** Node.js (TypeScript)
 - **Database:** MongoDB
-- **Authentication:** JWT-based authentication
+- **Authentication:** JWT-based system
 - **Authorization:** Role-based permissions
-- **Third-Party Integration:** Google Calendar API
+- **Integration:** Google Calendar API
 
-## Setup Instructions
+## 📝 Setup Instructions
 
 ### Prerequisites
 - Node.js (v16+ recommended)
@@ -47,50 +48,59 @@ The Task Assignment Application is a task management system with a calendar inte
 - Google API credentials for Calendar integration
 
 ### Installation
-1. Clone the repository:
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/your-repo/task-assignment-app.git
    cd task-assignment-app
    ```
-2. Install dependencies:
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
-3. Configure environment variables:
-   - Create a `.env` file in the root directory and add the following:
+
+3. **Configure environment variables:**
+   - Create a `.env` file in the root directory:
      ```env
      MONGO_URI=<your-mongodb-connection-string>
      JWT_SECRET=<your-secret-key>
      GOOGLE_CLIENT_ID=<your-google-client-id>
      GOOGLE_CLIENT_SECRET=<your-google-client-secret>
      ```
-4. Start the backend server:
+
+4. **Start the backend server:**
    ```bash
    npm run server
    ```
-5. Start the frontend application:
+
+5. **Start the frontend application:**
    ```bash
    npm run client
    ```
 
-## API Endpoints
+## 🔌 API Endpoints
 
 ### Authentication
-- `POST /auth/login` - Login user
-- `POST /auth/signup` - Register new user
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | Login user |
+| POST | `/auth/signup` | Register new user |
 
 ### Task Management
-- `POST /tasks` - Create a new task (Managers only, integrates with Google Calendar)
-- `GET /tasks` - Get tasks (Employees get only their tasks, Managers get all assigned tasks)
-- `PUT /tasks/:id` - Update task (Managers only)
-- `DELETE /tasks/:id` - Delete task (Managers only)
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| POST | `/tasks` | Create a new task | Managers only |
+| GET | `/tasks` | Get tasks | Role-based access |
+| PUT | `/tasks/:id` | Update task | Managers only |
+| DELETE | `/tasks/:id` | Delete task | Managers only |
 
-## License
+## 📄 License
 This project is open-source and available under the [MIT License](LICENSE).
 
-## Contributions
-Feel free to fork the repository and submit pull requests to improve the application!
+## 👥 Contributions
+We welcome contributions! Feel free to fork the repository and submit pull requests to improve the application.
 
 ---
 
-Enjoy managing tasks efficiently! 🚀
+### 🚀 Enjoy managing tasks efficiently!

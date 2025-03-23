@@ -72,7 +72,7 @@ export default class TaskController {
                     }
                 )).json()
                 const assignedUser = await this.userRepository.findById(taskDto.assignee.toHexString())
-                if (assignedUser) {
+                if (assignedUser?.access_token) {
                     await (await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events",
                         {
                             method: "POST",
