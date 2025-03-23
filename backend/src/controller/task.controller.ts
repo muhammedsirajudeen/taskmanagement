@@ -48,20 +48,20 @@ export default class TaskController {
                 dueDate: req.body.dueDate,
                 priority: req.body.priority
             } as Stripped<ITaskModelType>
+            const event: GoogleCalendarEvent = {
+                summary: taskDto.title,
+                description: taskDto.description,
+                start: {
+                    dateTime: new Date().toISOString(),
+                    timeZone: "UTC"
+                },
+                end: {
+                    dateTime: new Date(taskDto.dueDate).toISOString(),
+                    timeZone: "UTC"
+                },
+            }
             if (decodedUser.access_token) {
                 //write logic for creating an event in google calendar for both assignee and assignedBy
-                const event: GoogleCalendarEvent = {
-                    summary: taskDto.title,
-                    description: taskDto.description,
-                    start: {
-                        dateTime: new Date().toISOString(),
-                        timeZone: "UTC"
-                    },
-                    end: {
-                        dateTime: new Date(taskDto.dueDate).toISOString(),
-                        timeZone: "UTC"
-                    },
-                }
                 await (await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events",
                     {
                         method: "POST",
