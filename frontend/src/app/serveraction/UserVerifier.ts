@@ -11,7 +11,6 @@ export async function userVerifier() {
         if (!accessToken) {
             return null
         }
-        console.log(accessToken)
         const response = await axiosInstance.get('/user/verify', {
             headers: {
                 "Cookie": `access_token=${accessToken.value}`
