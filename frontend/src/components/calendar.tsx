@@ -17,16 +17,19 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { PopulatedTask } from "@/types"
 import { CreateTaskDialog } from "@/components/create-task-dialog"
-import { mutate } from "swr"
+import { KeyedMutator } from "swr"
+import { TaskData } from "@/app/dashboard/dashboard.page."
 
 interface CalendarProps {
   selectedDate: Date
   onDateSelect: (date: Date) => void
   tasks: PopulatedTask[]
   userRole: string
+  mutate:KeyedMutator<TaskData>
+
 }
 
-export function Calendar({ selectedDate, onDateSelect, tasks, userRole }: CalendarProps) {
+export function Calendar({ selectedDate, onDateSelect,mutate, tasks, userRole }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [taskDate, setTaskDate] = useState<Date | null>(null)

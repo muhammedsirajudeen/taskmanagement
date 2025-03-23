@@ -91,7 +91,7 @@ export default function DashboardPage() {
     <DashboardLayout user={user}>
       <div className="flex flex-col lg:flex-row h-full">
         <div className="w-full lg:w-8/12 p-4">
-          <Calendar selectedDate={selectedDate} onDateSelect={handleDateSelect} tasks={tasks} userRole={user.role} />
+          <Calendar mutate={mutate} selectedDate={selectedDate} onDateSelect={handleDateSelect} tasks={tasks} userRole={user.role} />
         </div>
         <div className="w-full lg:w-4/12 border-l border-border">
           <TaskList
