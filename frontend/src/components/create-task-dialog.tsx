@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import useSWR, { KeyedMutator } from "swr"
-import { fetcher } from "@/lib/utils"
+import { fetcher, ToastStyles } from "@/lib/utils"
 import { User } from "@/types"
 import axiosInstance from "@/lib/axios"
 import { TaskData } from "@/app/dashboard/dashboard.page."
+import { toast } from "sonner"
 
 interface CreateTaskDialogProps {
   isOpen: boolean
@@ -96,9 +97,11 @@ export function CreateTaskDialog({ isOpen, onClose, date, mutate }: CreateTaskDi
       console.log(response)
       onClose()
       mutate()
+      toast.success("Adding your task ...",ToastStyles.success)
       reset()
     } catch (error) {
       console.error("Failed to create task:", error)
+      toast.error("Please try again",ToastStyles.error)
     }
   }
 
