@@ -18,6 +18,9 @@ import {
 import { Calendar, Users, LogOut, Menu, X } from "lucide-react"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import axiosInstance from "@/lib/axios"
+import { toast } from "sonner"
+import { ToastStyles } from "@/lib/utils"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -33,8 +36,11 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("user")
+  const handleLogout = async () => {
+    document.cookie=""
+    const response=await axiosInstance.get('/user/logout')
+    console.log(response)
+    toast.success('logged out',ToastStyles.success)
     router.push("/login")
   }
 
@@ -63,7 +69,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <span className="ml-2 text-lg font-semibold">Task Manager</span>
               </div>
               <nav className="grid gap-2 p-4">
-                <Button variant="ghost" className="justify-start gap-2">
+                <Button  onClick={()=>{
+                  router.push('/dashboard')
+                }} variant="ghost" className="justify-start gap-2">
                   <Calendar className="h-5 w-5" />
                   Calendar
                 </Button>
@@ -107,7 +115,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-64 border-r bg-muted/40 lg:block">
           <nav className="grid gap-2 p-4">
-            <Button variant="ghost" className="justify-start gap-2">
+            <Button onClick={()=>{
+              router.push('/dashboard')
+            }} variant="ghost" className="justify-start gap-2">
               <Calendar className="h-5 w-5" />
               Calendar
             </Button>

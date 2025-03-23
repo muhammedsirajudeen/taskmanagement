@@ -1,7 +1,12 @@
-import  Dashboard  from "./dashboard.page.";
+import { userVerifier } from "../serveraction/UserVerifier";
+import Dashboard from "./dashboard.page.";
 
-export default function Page(){
-    return(
-        <Dashboard/>
+
+
+export default async  function Page() {
+    const user=await userVerifier()
+    console.log(user)
+    return (
+        <Dashboard />
     )
 }

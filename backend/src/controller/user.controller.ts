@@ -143,7 +143,17 @@ class UserController {
             console.log(error)
             const controllerError = error as Error
             res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
-
+        }
+    }
+    logoutHandler(req: Request, res: Response) {
+        try {
+            console.log(req.url)
+            res.cookie('access_token', '', { expires: new Date(0), httpOnly: true, secure: true })
+            res.status(HTTP_STATUS.OK).json({ message: "success" })
+        } catch (error) {
+            console.log(error)
+            const controllerError = error as Error
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "please try again", error: controllerError.message })
         }
     }
     async AddRoleAndManager(req: Request, res: Response) {

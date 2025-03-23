@@ -10,6 +10,7 @@ router.post("/signin", (req, res) => userController.Login(req, res))
 router.post("/google/signup", (req, res) => userController.googleSignupUser(req, res))
 router.post("/google/signin", (req, res) => userController.googleSigninUser(req, res))
 router.get("/verify", (req, res) => userController.VerifyToken(req, res))
+router.get("/logout", (req, res) => userController.logoutHandler(req, res))
 router.post("/", UserMiddleware, (req, res,) => userController.createUser(req, res));
 router.put(`/:id/role`, ManagerMiddleware, (req, res) => userController.AddRoleAndManager(req, res))
 router.get("/all", UserMiddleware, (req, res) => userController.getUsers(req, res));
