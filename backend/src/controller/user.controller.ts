@@ -63,7 +63,7 @@ class UserController {
                 return
             }
             const token = JwtUtil.generateToken({ ...user.toObject(), password: undefined })
-            res.cookie('access_token', token, { sameSite: "strict", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
+            res.cookie('access_token', token, { sameSite: "none", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
             res.status(HTTP_STATUS.OK).json({ message: "user verified", user: { ...user.toObject(), password: undefined } })
         } catch (error) {
             const controllerError = error as Error
@@ -122,7 +122,7 @@ class UserController {
             }
             const jwtToken = await JwtUtil.generateToken({ ...user.toObject(), password: undefined })
             await this.repository.updateById(user.id, { access_token: token })
-            res.cookie('access_token', jwtToken, { sameSite: "strict", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
+            res.cookie('access_token', jwtToken, { sameSite: "none", httpOnly: true, secure: process.env.NODE_ENV === "production" ? true : false })
             res.status(HTTP_STATUS.OK).json({ message: 'Signed in', user: { ...user, password: undefined }, token: jwtToken })
         } catch (error) {
             console.log(error)
