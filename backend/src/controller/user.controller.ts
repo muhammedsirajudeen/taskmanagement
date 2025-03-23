@@ -148,7 +148,7 @@ class UserController {
     logoutHandler(req: Request, res: Response) {
         try {
             console.log(req.url)
-            res.cookie('access_token', '', { expires: new Date(0), httpOnly: true, secure: true })
+            res.cookie('access_token', '', { expires: new Date(0), httpOnly: true, secure: true, sameSite: "none" })
             res.status(HTTP_STATUS.OK).json({ message: "success" })
         } catch (error) {
             console.log(error)
