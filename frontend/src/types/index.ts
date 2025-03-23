@@ -5,6 +5,16 @@ export interface User {
     role: "Manager" | "Employee"
     manager?: User
 }
+export interface CalendarEvent {
+    id: string
+    title: string
+    start: Date
+    end: Date
+    priority: "High" | "Medium" | "Low" | "Default"
+    description?: string
+    assignedTo?: string
+}
+
 
 export interface Task {
     _id: string

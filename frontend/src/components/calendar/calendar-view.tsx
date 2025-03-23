@@ -1,14 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { Calendar, dateFnsLocalizer } from "react-big-calendar"
 import { format, parse, startOfWeek, getDay } from "date-fns"
-import enUS from "date-fns/locale/en-US"
+import {enUS} from "date-fns/locale/en-US"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import { Card } from "@/components/ui/card"
-import type { CalendarEvent } from "@/lib/types"
-import { getPriorityColor } from "@/lib/utils"
-import { TaskDialog } from "@/components/calendar/task-dialog"
+import type { CalendarEvent } from "@/types" 
 
 const locales = {
   "en-US": enUS,
@@ -28,31 +25,37 @@ interface CalendarViewProps {
   userId: string
 }
 
-export function CalendarView({ events, isManager, userId }: CalendarViewProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [dialogMode, setDialogMode] = useState<"view" | "create" | "edit">("view")
+export function CalendarView({ events, isManager }: CalendarViewProps) {
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "High":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+      case "Medium":
+        return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+      case "Low":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+      default:
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+    }
+  }
 
   const handleSelectSlot = ({ start }: { start: Date }) => {
     if (isManager) {
-      setSelectedDate(start)
-      setDialogMode("create")
-      setIsDialogOpen(true)
+      console.log(start)
+      // setSelectedDate(start)
+      // setDialogMode("create")
+      // setIsDialogOpen(true)
     }
   }
 
   const handleSelectEvent = (event: CalendarEvent) => {
-    setSelectedEvent(event)
-    setDialogMode(isManager ? "edit" : "view")
-    setIsDialogOpen(true)
+    console.log(event)
+    // setSelectedEvent(event)
+    // setDialogMode(isManager ? "edit" : "view")
+    // setIsDialogOpen(true)
   }
 
-  const closeDialog = () => {
-    setIsDialogOpen(false)
-    setSelectedEvent(null)
-    setSelectedDate(null)
-  }
+
 
   const eventStyleGetter = (event: CalendarEvent) => {
     const style = {
@@ -84,16 +87,6 @@ export function CalendarView({ events, isManager, userId }: CalendarViewProps) {
           views={["month", "week", "day", "agenda"]}
         />
       </div>
-
-      <TaskDialog
-        isOpen={isDialogOpen}
-        onClose={closeDialog}
-        mode={dialogMode}
-        event={selectedEvent}
-        date={selectedDate}
-        isManager={isManager}
-        userId={userId}
-      />
     </Card>
   )
 }
