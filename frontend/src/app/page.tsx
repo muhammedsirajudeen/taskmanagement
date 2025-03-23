@@ -43,7 +43,10 @@ export default function Home() {
                 <Button variant="outline" onClick={() => {
                   router.push("/login")
                 }} >Log in</Button>
-                <Button>Sign up</Button>
+                <Button onClick={()=>{
+                  router.push("/login")
+
+                }} >Sign up</Button>
               </div>
 
           }
